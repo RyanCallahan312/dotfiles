@@ -1,0 +1,35 @@
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[commit]
+	gpgsign = true
+[gpg]
+	program = /opt/homebrew/bin/gpg
+[include]
+	path = ~/.gitconfig.local
+[credential]
+	helper = osxkeychain
+[merge]
+	tool = nvimdiff
+[diff]
+	tool = nvimdiff
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[rebase]
+	updateRefs = true
+[rerere]
+	enabled = true
+[push]
+	autoSetupRemote = true
+[branch]
+	autoSetupRebase = always

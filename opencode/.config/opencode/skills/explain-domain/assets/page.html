@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; form-action 'none'">
+  <title>TITLE</title>
+  <link rel="stylesheet" href="kit.css">
+  <!-- Theme override (brand tokens), if any. Never restyle kit components here; change tokens. -->
+  <style></style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the content</a>
+  <!-- One link per h2 section; class="d2" for a subordinate guide (a <details> or an h3 with an id). No numbers. -->
+  <nav class="toc" aria-label="On this page">
+    <p><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M2 4h12M2 8h8M2 12h10"/></svg>On this page</p>
+    <div>
+      <a href="#overview">Overview</a>
+      <a href="#SECTION">SECTION NAME</a>
+      <a class="d2" href="#SUBSECTION">SUBSECTION NAME</a>
+      <svg class="rail" aria-hidden="true"><path/></svg><svg class="rail thumb" aria-hidden="true"><path/></svg>
+    </div>
+  </nav>
+  <main id="main">
+    <header>
+      <h1>TITLE</h1>
+      <p class="lead">ANSWER THE READER'S QUESTION IN ONE OR TWO SENTENCES.</p>
+      <p class="meta">NAME THE EXAMPLE AND ANY CONDITION THAT MATTERS.</p>
+    </header>
+
+    <!-- Replace this section with a generated figure with id="overview" if a flow or chart fits better. -->
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>SHOW THE KEY RELATIONSHIP OR DISTINCTION USING THE EXAMPLE.</p>
+    </section>
+
+    <section id="SECTION">
+      <h2>SECTION NAME</h2>
+      <p>EXPLAIN ONE IDEA USING THE SAME EXAMPLE.</p>
+      <details id="SUBSECTION"><summary>WHAT IF ONE FACT CHANGED?</summary><p>EXPLAIN THE DIFFERENCE.</p></details>
+    </section>
+  </main>
+  <script src="kit.js"></script>
+</body>
+</html>

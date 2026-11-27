@@ -1,0 +1,34 @@
+{
+  "budget_minutes": {
+    "code-quality": 12,
+    "default": 10,
+    "full": 15
+  },
+  "default_scope": "branch",
+  "lenses": {
+    "disabled": [
+      "security",
+      "performance",
+      "docs",
+      "ux"
+    ]
+  },
+  "mode": "full",
+  "panel": {
+    "enabled": true,
+    "models": [
+      {
+        "model": "openai/gpt-6.2-sol",
+        "variant": "medium"
+      },
+      {
+        "model": "github-copilot/gemini-4-neon",
+        "variant": "high"
+      },
+      {
+        "model": "claude-agent/opus",
+        "variant": "medium"
+      }
+    ]
+  }
+}

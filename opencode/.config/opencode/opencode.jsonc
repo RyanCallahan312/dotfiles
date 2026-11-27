@@ -1,0 +1,365 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "update": "disable",
+  "share": "disabled",
+  "permissions": [
+    { "action": "skill", "resource": "*", "effect": "allow" },
+    { "action": "external_directory", "resource": "/tmp/**", "effect": "allow" },
+    { "action": "external_directory", "resource": "/tmp/*", "effect": "allow" },
+    { "action": "external_directory", "resource": "$HOME/.claude/**", "effect": "deny" },
+    { "action": "external_directory", "resource": "$HOME/.claude/*", "effect": "deny" },
+    { "action": "external_directory", "resource": "$HOME/.aspire/logs/**", "effect": "allow" },
+    { "action": "external_directory", "resource": "$HOME/.aspire/logs/*", "effect": "allow" },
+    { "action": "external_directory", "resource": "$HOME/.local/share/opencode/repos/*", "effect": "allow" },
+    { "action": "external_directory", "resource": "$HOME/.local/share/opencode/repos/**", "effect": "allow" },
+    { "action": "external_directory", "resource": "$HOME/.plannotator/*", "effect": "allow" },
+    { "action": "external_directory", "resource": "$HOME/.plannotator/**", "effect": "allow" },
+    { "action": "external_directory", "resource": "$HOME/.opencode/*", "effect": "allow" },
+    { "action": "external_directory", "resource": "$HOME/.opencode/**", "effect": "allow" }
+  ],
+  "agents": {
+    "plan": {
+      "permissions": [
+        { "action": "skill", "resource": "*", "effect": "allow" }
+      ]
+    },
+    "build": {
+      "permissions": [
+        { "action": "skill", "resource": "*", "effect": "allow" }
+      ]
+    }
+  },
+  "mcp": {
+    "servers": {
+      // "playwriter": {
+      //   "command": ["bunx", "playwriter"],
+      //   "type": "local",
+      //   "disabled": true,
+      //   "environment": {
+      //     "PLAYWRITER_AUTO_ENABLE": "1"
+      //   }
+      // },
+      "atlassian": {
+        "type": "remote",
+        "url": "https://mcp.atlassian.com/v2/mcp",
+        "disabled": false 
+      },
+      // "openpets": {
+      //   "type": "local",
+      //   "command": [
+      //     "npx",
+      //     "-y",
+      //     "@open-pets/cli@2.1.1",
+      //     "mcp",
+      //     "--pet",
+      //     "builtin"
+      //   ],
+      //   "disabled": true
+      // },
+      "sentry": {
+        "type": "remote",
+        "url": "https://mcp.sentry.dev/mcp",
+        "oauth": {},
+        "disabled": false
+      },
+      // Slack has no dynamic client registration; reuse the client ID from Slack's official Claude plugin.
+      "slack": {
+        "type": "remote",
+        "url": "https://mcp.slack.com/mcp",
+        "oauth": {
+          "client_id": "1601185624273.8899143856786",
+          "redirect_uri": "http://localhost:3118/callback",
+          // Read-only user token: no chat/reactions/canvases/lists/files write scopes.
+          "scope": "search:read.public,search:read.private,search:read.mpim,search:read.im,search:read.files,search:read.users,files:read,emoji:read,channels:history,groups:history,mpim:history,im:history,reactions:read,canvases:read,lists:read,users:read,users:read.email,channels:read,groups:read,im:read,mpim:read"
+        },
+        "disabled": true
+      },
+      // gog (gogcli) Gmail tools. Auth lives in gog's keyring (`gog auth add`), with a gmail.readonly token;
+      // --readonly and --gmail-no-send also block writes, and only Gmail tools are exposed.
+      "gog": {
+        "type": "local",
+        "command": [
+          "/opt/homebrew/bin/gog",
+          "--account", "{env:GOG_ACCOUNT}",
+          "--readonly",
+          "--gmail-no-send",
+          "mcp",
+          "--allow-tool", "gmail"
+        ]
+      },
+      "browse": {
+        "type": "local",
+        "command": [
+          "{env:HOME}/.local/bin/browse",
+          "mcp"
+        ],
+        "environment": {
+          "OPENCODE_BROWSER_RUNTIME": "auto-update"
+        }
+      }
+    }
+  },
+  "references": {
+    "opencode": {
+      "repository": "https://github.com/anomalyco/opencode",
+      "branch": "dev",
+      "description": "OpenCode source; use for plugin, tool, and core implementation details (packages/core/src)"
+    }
+  },
+  // "instructions": [
+  //   ".opencode/openpets.md"
+  // ],
+  "plugins": [
+    "./plugins/atlassian-artifacts",
+    {
+      "package": "@plannotator/opencode@latest",
+      "options": {
+        "workflow": "plan-agent",
+        "planningAgents": [
+          "plan"
+        ]
+      }
+    },
+    "@dietrichgebert/ponytail",
+    {
+      "package": "github:anomalyco/rift#v0.0.13::path:plugins/opencode",
+      "options": {
+        "copyAll": true
+      }
+    },
+    "@rc312/opencode-directorate"
+  ],
+  // "plugins": [
+  //   {
+  //     "package": "@open-pets/opencode@2.1.1",
+  //     "options": {
+  //       "pet": "builtin"
+  //     }
+  //   }
+  // ],
+  "providers": {
+    "claude-agent": {
+      "models": {
+        "fable": { "disabled": true },
+        "sonnet": { "disabled": true },
+        "haiku": { "disabled": true },
+        "claude-sonnet-5": { "disabled": true },
+        "claude-opus-5": { "disabled": true },
+        "claude-fable-5": { "disabled": true },
+        "claude-opus-4-8": { "disabled": true },
+        "claude-opus-4-7": { "disabled": true },
+        "claude-opus-4-6": { "disabled": true },
+        "claude-sonnet-4-6": { "disabled": true },
+        "claude-haiku-4-5-20251001": { "disabled": true }
+      }
+    },
+    "openai": {
+      "models":{
+        "gpt-6.1-terra-fast": { "disabled": true },
+        "gpt-6.1-sol-fast": { "disabled": true },
+        "gpt-6.1-sol-ultrafast": { "disabled": true },
+        "gpt-6.2-astra-fast": { "disabled": true },
+        "gpt-6.2-astra-ultrafast": { "disabled": true },
+        "gpt-6.2-sol-fast": { "settings": { "text": { "verbosity": "low" } } },
+        "gpt-6.2-sol-ultrafast": { "settings": { "text": { "verbosity": "low" } } },
+        "gpt-6.2-sol": { "settings": { "text": { "verbosity": "low" } } },
+        "gpt-6.2-astra": { "settings": { "text": { "verbosity": "low" } } },
+        "gpt-6.2-astra-flex": { "disabled": true },
+        "gpt-6.2-sol-flex": { "disabled": true },
+        "gpt-6.1-terra-flex": { "disabled": true },
+        "gpt-6.1-sol-flex": { "disabled": true },
+        "gpt-6-luna-flex": { "disabled": true },
+        "gpt-6-sol-flex": { "disabled": true },
+        "gpt-6-astra-flex": { "disabled": true },
+        "gpt-5.6-sol-flex": { "disabled": true },
+        "gpt-5.6-terra-flex": { "disabled": true },
+        "gpt-5.6-luna-flex": { "disabled": true },
+        "gpt-6-sol": { "disabled": true },
+        "gpt-6-sol-fast": { "disabled": true },
+        "gpt-6-astra-fast": { "disabled": true },
+        "gpt-6-astra-ultrafast": { "disabled": true },
+        "gpt-6-luna-fast": { "disabled": true },
+        "gpt-5.6-cyber": { "disabled": true },
+        "gpt-5.6-sol": { "disabled": true },
+        "gpt-5.6-sol-fast": { "disabled": true },
+        "gpt-5.6-terra": { "disabled": true },
+        "gpt-5.6-terra-fast": { "disabled": true },
+        "gpt-5.6-luna": { "disabled": true },
+        "gpt-5.6-luna-fast": { "disabled": true },
+        "gpt-6-astra": {
+          "disabled": true,
+          "limit": {
+            "context": 1050000,
+            "output": 128000
+          },
+          "settings": {
+            "text":{
+              "verbosity": "low"
+            }
+          }
+        },
+        "gpt-6.1-sol": {
+          "disabled": true,
+          "limit": {
+            "context": 1050000,
+            "output": 128000
+          },
+          "settings": {
+            "text":{
+              "verbosity": "low"
+            }
+          }
+        },
+        "gpt-6.1-terra": {
+          "limit": {
+            "context": 1050000,
+            "output": 128000
+          },
+          "settings": {
+            "text":{
+              "verbosity": "low"
+            }
+          }
+        },
+        "gpt-6-luna": {
+          "limit": {
+            "context": 1050000,
+            "output": 128000
+          },
+          "settings": {
+            "text":{
+              "verbosity": "low"
+            }
+          }
+        }
+      }
+    },
+
+    "github-copilot": {
+      "models": {
+        "claude-fable-5": { "disabled": true },
+        "claude-fable-5.1": { "disabled": true },
+        "claude-fable-5.2": { "disabled": true },
+        "claude-haiku-4.5": { "disabled": true },
+        "claude-haiku-5.5": { "disabled": true },
+        "claude-opus-4.7": { "disabled": true },
+        "claude-opus-4.8": { "disabled": true },
+        "claude-opus-5": { "disabled": true },
+        "claude-opus-5.5": { "disabled": true },
+        "claude-sonnet-4.6": { "disabled": true },
+        "claude-sonnet-5": { "disabled": true },
+        "claude-sonnet-5.5": { "disabled": true },
+        "gemini-3.5-flash": { "disabled": true },
+        "gemini-3.6-flash": { "disabled": true },
+        "gemini-3.7-flash": { "disabled": true },
+        "gemini-3.8-flash": { "disabled": true },
+        "gemini-4-argon": { "disabled": true },
+        "gemini-4-carbon": { "disabled": true },
+        "gemini-4-hydrogen": { "disabled": true },
+        "gpt-5-mini": { "disabled": true },
+        "gpt-5.3-codex": { "disabled": true },
+        "gpt-5.4": { "disabled": true },
+        "gpt-5.4-mini": { "disabled": true },
+        "gpt-5.4-nano": { "disabled": true },
+        "gpt-5.5": { "disabled": true },
+        "gpt-5.6-luna": { "disabled": true },
+        "gpt-5.6-sol": { "disabled": true },
+        "gpt-5.6-terra": { "disabled": true },
+        "gpt-6-astra": { "disabled": true },
+        "gpt-6-luna": { "disabled": true },
+        "gpt-6-sol": { "disabled": true },
+        "gpt-6.1-sol": { "disabled": true },
+        "gpt-6.1-terra": { "disabled": true },
+        "gpt-6.2-astra": { "disabled": true },
+        "gpt-6.2-sol": { "disabled": true },
+        "grok-4.5": { "disabled": true },
+        "grok-4.6": { "disabled": true },
+        "grok-4.7": { "disabled": true },
+        "kimi-k2.7-code": { "disabled": true },
+        "kimi-k3": { "disabled": true },
+        "mai-code-1.1-flash": { "disabled": true },
+        "mai-code-2": { "disabled": true },
+        "mai-code-2-flash": { "disabled": true }
+      }
+    }
+    // "fireworks-ai": {
+      // "models": {
+      //   "accounts/fireworks/routers/kimi-k2p6-turbo": {
+      //     "name": "Kimi K2.6 (firepass)",
+      //     "family": "kimi-thinking",
+      //     "release_date": "2026-04-17",
+      //     "attachment": false,
+      //     "reasoning": true,
+      //     "temperature": true,
+      //     "tool_call": true,
+      //     "cost": {
+      //       "cache_read": 0,
+      //       "input": 0,
+      //       "output": 0
+      //     },
+      //     "limit": {
+      //       "context": 262000,
+      //       "output": 262000
+      //     },
+      //     "modalities": {
+      //       "input": ["text", "image"],
+      //       "output": ["text"]
+      //     },
+      //     "interleaved": {
+      //       "field": "reasoning_content"
+      //     }
+      //   }
+      // }
+    // }
+  },
+  "lsp": {
+    "typescript": {
+      "disabled": true
+    },
+    "eslint": {
+      "disabled": true
+    },
+    "tsgo": {
+      "command": ["bunx", "--bun", "tsgo", "--lsp", "--stdio"],
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".ts",
+        ".tsx",
+        ".mts",
+        ".cts"
+      ]
+    },
+    "biome": {
+      "command": ["bunx", "--bun", "@biomejs/biome", "lsp-proxy"],
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".ts",
+        ".tsx",
+        ".mts",
+        ".cts",
+        ".json",
+        ".jsonc",
+        ".css",
+        ".graphql",
+        ".gql",
+        ".html"
+      ]
+    }
+  },
+  "experimental": {
+    "subagent_depth": 3
+  },
+  "policies": [
+    { "action": "provider.use", "resource": "*", "effect": "deny" },
+    { "action": "provider.use", "resource": "openai", "effect": "allow" },
+    { "action": "provider.use", "resource": "claude-agent", "effect": "allow" },
+    { "action": "provider.use", "resource": "github-copilot", "effect": "allow" },
+    { "action": "skill.use", "resource": "agent-browser", "effect": "deny" }
+  ]
+}

@@ -1,0 +1,419 @@
+export GPG_TTY=$TTY
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=60'
+
+_ensure_ssh_agent() {
+  local agent_sock ssh_add_status=0
+
+  # Keep working inherited/forwarded agents; recover through the shared macOS agent.
+  ssh-add -l >/dev/null 2>&1 || ssh_add_status=$?
+  if (( ssh_add_status > 1 )); then
+    if [[ $OSTYPE == darwin* ]]; then
+      agent_sock=$(launchctl asuser "$UID" launchctl getenv SSH_AUTH_SOCK 2>/dev/null) || agent_sock=""
+    fi
+    if [[ ! -S "$agent_sock" ]]; then
+      print -u2 -- "SSH agent unavailable (SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-unset}). Start your system SSH agent and reopen the terminal."
+      return 1
+    fi
+
+    ssh_add_status=0
+    SSH_AUTH_SOCK="$agent_sock" ssh-add -l >/dev/null 2>&1 || ssh_add_status=$?
+    if (( ssh_add_status > 1 )); then
+      print -u2 -- "Cannot reach the system SSH agent at $agent_sock. Restart your system SSH agent and reopen the terminal."
+      return 1
+    fi
+    export SSH_AUTH_SOCK="$agent_sock"
+    unset SSH_AGENT_PID
+  fi
+
+  # Never add this machine's private keys to an agent forwarded from another host.
+  if [[ -z ${SSH_CONNECTION-} && -r "$HOME/.ssh/github" ]] &&
+     { [[ ! -r "$HOME/.ssh/github.pub" ]] || ! ssh-add -T "$HOME/.ssh/github.pub" >/dev/null 2>&1; }; then
+    if [[ $OSTYPE == darwin* ]]; then
+      ssh-add --apple-use-keychain "$HOME/.ssh/github" || return 1
+    else
+      ssh-add "$HOME/.ssh/github" || return 1
+    fi
+  fi
+}
+
+# Initialize before any child process starts and before instant prompt captures output.
+_ensure_ssh_agent || true
+
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# Startup helpers
+(( ${+ZSH_CACHE_DIR} )) || typeset -gr ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/oh-my-zsh"
+(( ${+_ZSH_COMPLETION_CACHE_DIR} )) || typeset -gr _ZSH_COMPLETION_CACHE_DIR="$ZSH_CACHE_DIR/completions"
+typeset -gi _IS_INTERACTIVE_ZSH=0
+typeset -gi _IS_REAL_INTERACTIVE_ZSH=0
+
+if [[ -o interactive ]]; then
+  _IS_INTERACTIVE_ZSH=1
+fi
+
+if (( _IS_INTERACTIVE_ZSH )) && [[ -z ${ZSH_EXECUTION_STRING-} ]]; then
+  _IS_REAL_INTERACTIVE_ZSH=1
+fi
+
+mkdir -p "$ZSH_CACHE_DIR" "$_ZSH_COMPLETION_CACHE_DIR"
+
+_eval_cached_init() {
+  local cache_file=$1
+  shift
+
+  if [[ -f "$cache_file" ]]; then
+    source "$cache_file"
+  else
+    eval "$("$@")"
+  fi
+}
+
+_bootstrap_omz_if_needed() {
+  [[ -r "$ZSH/oh-my-zsh.sh" ]] && return 0
+  (( _IS_REAL_INTERACTIVE_ZSH )) || return 1
+  [[ -r "$_ZSH_BOOTSTRAP_SCRIPT" ]] || return 1
+
+  print -- "Bootstrapping Oh My Zsh runtime..."
+  zsh "$_ZSH_BOOTSTRAP_SCRIPT" || return 1
+  [[ -r "$ZSH/oh-my-zsh.sh" ]]
+}
+
+for _ssh_cmd in ssh scp sftp rsync; do
+  eval "
+    ${_ssh_cmd}() {
+      _ensure_ssh_agent || return 1
+      unfunction ${_ssh_cmd}
+      command ${_ssh_cmd} \"\$@\"
+    }
+  "
+done
+unset _ssh_cmd
+
+# If you come from bash you might have to change your $PATH.
+# export PATH=$HOME/bin:/usr/local/bin:$PATH
+
+# Oh My Zsh
+export ZSH="$HOME/.oh-my-zsh"
+(( ${+_ZSH_CUSTOM_DIR} )) || typeset -gr _ZSH_CUSTOM_DIR="${ZSH_CUSTOM:-$ZSH/custom}"
+(( ${+_ZSH_BOOTSTRAP_SCRIPT} )) || typeset -gr _ZSH_BOOTSTRAP_SCRIPT="${XDG_CONFIG_HOME:-$HOME/.config}/zsh/bootstrap-omz.zsh"
+(( ${+_ZSH_LOCAL_CONFIG} )) || typeset -gr _ZSH_LOCAL_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/zsh/local.zsh"
+(( ${+_NEXUS_CONFIG} )) || typeset -gr _NEXUS_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/nexus/nexus_config.bash"
+
+# Skip compfix security check for faster startup (saves ~20ms)
+ZSH_DISABLE_COMPFIX=true
+
+# Set name of the theme to load --- if set to "random", it will
+# load a random theme each time oh-my-zsh is loaded, in which case,
+# to know which specific one was loaded, run: echo $RANDOM_THEME
+# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
+if (( _IS_INTERACTIVE_ZSH )); then
+  ZSH_THEME="powerlevel10k/powerlevel10k"
+else
+  ZSH_THEME=""
+fi
+
+# Set list of themes to pick from when loading at random
+# Setting this variable when ZSH_THEME=random will cause zsh to load
+# a theme from this variable instead of looking in $ZSH/themes/
+# If set to an empty array, this variable will have no effect.
+# ZSH_THEME_RANDOM_CANDIDATES=( "powerlevel10k/powerlevel10k" "agnoster" )
+
+# Uncomment the following line to use case-sensitive completion.
+# CASE_SENSITIVE="true"
+
+# Uncomment the following line to use hyphen-insensitive completion.
+# Case-sensitive completion must be off. _ and - will be interchangeable.
+# HYPHEN_INSENSITIVE="true"
+
+# Uncomment one of the following lines to change the auto-update behavior
+# zstyle ':omz:update' mode disabled  # disable automatic updates
+# zstyle ':omz:update' mode auto      # update automatically without asking
+zstyle ':omz:update' mode disabled
+
+# Uncomment the following line to change how often to auto-update (in days).
+# zstyle ':omz:update' frequency 13
+
+# Uncomment the following line if pasting URLs and other text is messed up.
+# DISABLE_MAGIC_FUNCTIONS="true"
+
+# Uncomment the following line to disable colors in ls.
+# DISABLE_LS_COLORS="true"
+
+# Uncomment the following line to disable auto-setting terminal title.
+# DISABLE_AUTO_TITLE="true"
+
+# Uncomment the following line to enable command auto-correction.
+# ENABLE_CORRECTION="true"
+
+# Uncomment the following line to display red dots whilst waiting for completion.
+# You can also set it to another string to have that shown instead of the default red dots.
+# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
+# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
+# COMPLETION_WAITING_DOTS="true"
+
+# Uncomment the following line if you want to disable marking untracked files
+# under VCS as dirty. This makes repository status check for large repositories
+# much, much faster.
+# DISABLE_UNTRACKED_FILES_DIRTY="true"
+
+# Uncomment the following line if you want to change the command execution time
+# stamp shown in the history command output.
+# You can set one of the optional three formats:
+# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
+# or set a custom format using the strftime function format specifications,
+# see 'man strftime' for details.
+# HIST_STAMPS="mm/dd/yyyy"
+
+# Would you like to use another custom folder than $ZSH/custom?
+# ZSH_CUSTOM=/path/to/new-custom-folder
+
+# Docker CLI completions (must be before compinit/oh-my-zsh)
+fpath=(/Users/ryancallahan/.docker/completions $fpath)
+
+plugins=()
+
+if [[ -r "$ZSH/oh-my-zsh.sh" ]] || _bootstrap_omz_if_needed; then
+  source "$ZSH/oh-my-zsh.sh"
+elif (( _IS_INTERACTIVE_ZSH )); then
+  print -u2 -- "Missing Oh My Zsh runtime. Run: zsh $_ZSH_BOOTSTRAP_SCRIPT"
+fi
+
+_load_deferred_interactive_plugins() {
+  (( ${+_DEFERRED_INTERACTIVE_PLUGINS_LOADED} && _DEFERRED_INTERACTIVE_PLUGINS_LOADED )) && return 0
+
+  local plugin_file
+  typeset -gi _DEFERRED_INTERACTIVE_PLUGINS_LOADED=1
+
+  for plugin_file in \
+    "$_ZSH_CUSTOM_DIR/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh" \
+    "$_ZSH_CUSTOM_DIR/plugins/fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh"
+  do
+    [[ -r "$plugin_file" ]] && source "$plugin_file"
+  done
+}
+
+_activate_deferred_interactive_plugins() {
+  add-zle-hook-widget -D line-init _activate_deferred_interactive_plugins
+  _load_deferred_interactive_plugins
+  if zle; then
+    zle .reset-prompt
+  fi
+}
+
+if (( _IS_REAL_INTERACTIVE_ZSH )); then
+  autoload -Uz add-zle-hook-widget
+  add-zle-hook-widget line-init _activate_deferred_interactive_plugins
+fi
+
+refresh_zsh_startup_cache() {
+  local cache_dir="$_ZSH_COMPLETION_CACHE_DIR"
+  local dump_file file
+
+  mkdir -p "$cache_dir"
+
+  (( $+commands[gh] )) && gh completion -s zsh >| "$cache_dir/_gh"
+  (( $+commands[bun] )) && SHELL=zsh bun completions >| "$cache_dir/_bun"
+
+  dump_file="${ZSH_COMPDUMP:-${ZDOTDIR:-$HOME}/.zcompdump-${HOST/.*/}-${ZSH_VERSION}}"
+  [[ -n "$dump_file" && (! -f "${dump_file}.zwc" || "$dump_file" -nt "${dump_file}.zwc") ]] && zcompile "$dump_file"
+
+  for file in ~/.cache/mise-init.zsh ~/.cache/zoxide-init.zsh ~/.p10k.zsh "$cache_dir"/_gh "$cache_dir"/_bun; do
+    [[ -f "$file" && (! -f "${file}.zwc" || "$file" -nt "${file}.zwc") ]] && zcompile "$file"
+  done
+}
+
+# Shell state
+
+if (( _IS_INTERACTIVE_ZSH )) && [[ -f ~/.p10k.zsh ]]; then
+  source ~/.p10k.zsh
+fi
+
+# export MANPATH="/usr/local/man:$MANPATH"
+
+# You may need to manually set your language environment
+# export LANG=en_US.UTF-8
+
+# Preferred editor for local and remote sessions
+# if [[ -n $SSH_CONNECTION ]]; then
+#   export EDITOR='vim'
+# else
+#   export EDITOR='mvim'
+# fi
+
+# Compilation flags
+# export ARCHFLAGS="-arch x86_64"
+
+# Set personal aliases, overriding those provided by oh-my-zsh libs,
+# plugins, and themes. Aliases can be placed here, though oh-my-zsh
+# users are encouraged to define aliases within the ZSH_CUSTOM folder.
+# For a full list of active aliases, run `alias`.
+#
+# Example aliases
+# alias zshconfig="mate ~/.zshrc"
+# alias ohmyzsh="mate ~/.oh-my-zsh"
+
+export HISTFILE=~/.zsh_history
+export HISTSIZE=10000
+export SAVEHIST=10000
+setopt INC_APPEND_HISTORY
+setopt HIST_FIND_NO_DUPS
+
+# Paths and toolchain init
+typeset -U path PATH
+path=(
+  "$HOME/.local/bin"
+  /opt/homebrew/opt/mysql-client/bin
+  $path
+  # Keep macOS system utilities ahead of nanobrew wrappers like shasum.
+  /opt/nanobrew/prefix/bin
+)
+
+export LDFLAGS="-L/opt/homebrew/opt/mysql-client/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/mysql-client/include"
+# eval $(thefuck --alias)
+
+# export PATH="$HOME/.asdf/bin:$HOME/.asdf/shims:$PATH"
+# . "$HOME/.asdf/plugins/java/set-java-home.zsh"
+# . "$HOME/.asdf/plugins/dotnet/set-dotnet-env.zsh"
+
+# Regenerate with: mise activate zsh --shims > ~/.cache/mise-init.zsh
+_eval_cached_init ~/.cache/mise-init.zsh mise activate zsh --shims
+
+if [[ -d "$HOME/.local/share/mise/shims" ]]; then
+  path=(
+    "$HOME/.local/share/mise/shims"
+    $path
+  )
+  export PATH
+fi
+
+# Lazy-load terragrunt completion (bashcompinit is slow)
+terragrunt() {
+  unfunction terragrunt
+  autoload -U +X bashcompinit && bashcompinit
+  complete -o nospace -C /opt/homebrew/bin/terragrunt terragrunt
+  terragrunt "$@"
+}
+
+export TERRAGRUNT_DOWNLOAD=/tmp/terragrunt_caches
+# export PATH="/Library/Frameworks/R.framework/Resources/bin:$PATH"
+
+# . env_parallel.zsh
+
+# Regenerate with: zoxide init zsh > ~/.cache/zoxide-init.zsh
+_eval_cached_init ~/.cache/zoxide-init.zsh zoxide init zsh
+
+export PNPM_HOME="$HOME/Library/pnpm"
+path=(
+  /Users/ryancallahan/.bun/bin
+  /Users/ryancallahan/.opencode/bin
+  "$PNPM_HOME"
+  "$HOME/.npm-global/bin"
+  /opt/homebrew/opt/openssl@3/bin
+  $path
+  "$HOME/.dotnet/tools"
+  "$HOME/.spicetify"
+  /opt/nvim-linux64/bin
+)
+export PATH
+typeset -Ua _library_path
+_library_path=(
+  /opt/homebrew/opt/openssl@3/lib
+  ${${(s/:/)LIBRARY_PATH}:#}
+)
+_library_path=(${_library_path%/})
+export LIBRARY_PATH="${(j/:/)_library_path}"
+unset _library_path
+
+# Aliases and editor
+alias ls="eza --icons -1"
+alias grep="rg"
+alias cd="z"
+alias dn='dotnet new'
+alias dr='dotnet run'
+alias dt='dotnet test'
+alias dw='dotnet watch'
+alias dwr='dotnet watch run'
+alias dwt='dotnet watch test'
+alias ds='dotnet sln'
+alias da='dotnet add'
+alias dp='dotnet pack'
+alias dng='dotnet nuget'
+alias db='dotnet build'
+alias dres='dotnet restore'
+
+export POETRY_VIRTUALENVS_IN_PROJECT=true
+export NVIM_APPNAME="rvim"
+alias vi="nvim"
+alias vim="nvim"
+
+alias kvim="NVIM_APPNAME=\"kvim\" nvim"
+alias zvim="NVIM_APPNAME=\"lazyvim\" nvim"
+alias rvim="NVIM_APPNAME=\"rvim\" nvim"
+
+export AWS_PROFILE=default-mfa
+
+# Lazy load thefuck - only initialize when first called (saves ~280ms startup)
+# fuck() {
+#   unfunction fuck
+#   eval "$(thefuck --alias)"
+#   fuck "$@"
+# }
+
+_load_gh_mcp_pat() {
+  [[ -n ${GH_MCP_PAT-} ]] && return 0
+
+  local gh_mcp_pat
+  gh_mcp_pat=$(security find-generic-password -s GH_MCP -a GH_MCP_PAT -w 2>/dev/null) || return 0
+  export GH_MCP_PAT="$gh_mcp_pat"
+}
+
+# Credentials and lazy wrappers
+alias cat="bat -p"
+
+[[ -r "$_NEXUS_CONFIG" ]] && source "$_NEXUS_CONFIG"
+
+(( $+aliases[oc] )) && unalias oc
+
+oc() {
+  # OPENCODE_EXPERIMENTAL_PLAN_MODE=1 \
+  EDITOR=nvim \
+  OPENCODE_ENABLE_EXA=true \
+  OPENCODE_EXPERIMENTAL_EXA=true \
+  OPENCODE_EXPERIMENTAL_PARALLEL=true \
+  OPENCODE_EXPERIMENTAL_WORKSPACES=true \
+  OPENCODE_EXPERIMENTAL_SCOUT=true \
+  OPENCODE_EXPERIMENTAL_ICON_DISCOVERY=true \
+  OPENCODE_EXPERIMENTAL_LSP_TOOL=true \
+  OPENCODE_EXPERIMENTAL_REFERENCES=true \
+  opencode2 "$@"
+}
+
+# lazygit
+alias lg='lazygit'
+
+[[ -r "$_ZSH_LOCAL_CONFIG" ]] && source "$_ZSH_LOCAL_CONFIG"
+
+# opencode
+export PATH=/Users/RyanCallahan/.opencode/bin:$PATH
+
+export PATH=$PATH:/Users/RyanCallahan/.spicetify
+
+export PATH="/opt/homebrew/opt/sqlite/bin:$PATH"
+export PATH="/opt/homebrew/opt/unzip/bin:$PATH"
+
+# nanobrew
+
+# rift
+export PATH="$PATH:/Users/RyanCallahan/.cargo/bin/rift"
+
+# Pi
+export PATH="/Users/RyanCallahan/.local/share/mise/installs/node/23.10.0/bin:$PATH"
+
+# Cortex CLI completion (disable via /settings in cortex)
+[[ -s ~/.zsh/completions/cortex.zsh ]] && source ~/.zsh/completions/cortex.zsh

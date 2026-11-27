@@ -1,0 +1,6 @@
+cask "bruno"
+cask "datagrip"
+cask "font-hack-nerd-font"
+cask "ghostty"
+cask "github"
+cask "go2shell"

@@ -1,0 +1,5 @@
+# name|relative_path_from_$ZSH|origin|commit
+oh-my-zsh|.|https://github.com/ohmyzsh/ohmyzsh.git|25d4d753bfe235040ebaea068b21feca8570e156
+powerlevel10k|custom/themes/powerlevel10k|https://github.com/romkatv/powerlevel10k.git|932954a8b1e31ae540e9df5e5e464100d46e53ec
+zsh-autosuggestions|custom/plugins/zsh-autosuggestions|https://github.com/zsh-users/zsh-autosuggestions.git|a411ef3e0992d4839f0732ebeb9823024afaaaa8
+fast-syntax-highlighting|custom/plugins/fast-syntax-highlighting|https://github.com/zdharma-continuum/fast-syntax-highlighting|cf318e06a9b7c9f2219d78f41b46fa6e06011fd9

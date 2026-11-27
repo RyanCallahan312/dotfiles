@@ -1,0 +1,124 @@
+return {
+  -- {
+  --   -- Make sure to set this up properly if you have lazy=true
+  --   "MeanderingProgrammer/render-markdown.nvim",
+  --   opts = {
+  --     file_types = { "markdown", "Avante" },
+  --   },
+  -- },
+  -- {
+  --   "saghen/blink.cmp",
+  --   dependencies = {
+  --     "Kaiser-Yang/blink-cmp-avante",
+  --   },
+  --   opts = {
+  --     sources = {
+  --       -- Add 'avante' to the list
+  --       default = { "avante" },
+  --       providers = {
+  --         avante = {
+  --           module = "blink-cmp-avante",
+  --           name = "Avante",
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
+  -- {
+  --   "ravitemer/mcphub.nvim",
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --   },
+  --   build = "bun i -g mcp-hub@latest",
+  --   opts = {
+  --     cmd = "bunx",
+  --     cmdArgs = { "--bun", "mcp-hub" },
+  --     extensions = {
+  --       avante = {
+  --         make_slash_commands = true,
+  --       },
+  --     },
+  --     auto_approve = true,
+  --     workspace = {
+  --       enabled = true,
+  --       look_for = { ".mcphub/servers.json", ".vscode/mcp.json", ".cursor/mcp.json" },
+  --       reload_on_dir_changed = true,
+  --       port_range = { min = 40000, max = 41000 },
+  --       get_port = nil,
+  --     },
+  --   },
+  -- },
+  -- {
+  --   "yetone/avante.nvim",
+  --   event = "VeryLazy",
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "MunifTanjim/nui.nvim",
+  --     "folke/snacks.nvim",
+  --     "zbirenbaum/copilot.lua",
+  --     "ravitemer/mcphub.nvim",
+  --     "saghen/blink.cmp",
+  --   },
+  --   build = vim.fn.has("win32") == 1 and "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false"
+  --     or "make",
+  --   version = false,
+  --   opts = {
+  --     provider = "copilot",
+  --     auto_suggestions_provider = nil,
+  --     behaviour = {
+  --       auto_suggestions = false,
+  --     },
+  --     windows = {
+  --       width = 30,
+  --     },
+  --     providers = {
+  --       copilot = {
+  --         model = "gpt-5",
+  --       },
+  --     },
+  --     input = {
+  --       provider = "snacks",
+  --       provider_opts = {
+  --         title = "Avante Input",
+  --         icon = " ",
+  --       },
+  --     },
+  --     system_prompt = function()
+  --       local hub = require("mcphub").get_hub_instance()
+  --       return hub and hub:get_active_servers_prompt() or ""
+  --     end,
+  --     custom_tools = function()
+  --       return {
+  --         require("mcphub.extensions.avante").mcp_tool(),
+  --       }
+  --     end,
+  --     disabled_tools = {
+  --       "list_files",
+  --       "search_files",
+  --       "read_file",
+  --       "create_file",
+  --       "rename_file",
+  --       "delete_file",
+  --       "create_dir",
+  --       "rename_dir",
+  --       "delete_dir",
+  --       "bash",
+  --     },
+  --     rag_service = {
+  --       enabled = false,
+  --       host_mount = "/Users/ryancallahan/repos/",
+  --       runner = "docker",
+  --       llm = {
+  --         provider = "copilot",
+  --         model = "gpt-4o",
+  --       },
+  --       docker_extra_args = "",
+  --     },
+  --   },
+  --   config = function(_, opts)
+  --     require("avante").setup(opts)
+  --
+  --     vim.api.nvim_set_hl(0, "AvanteSidebarWinSeparator", { link = "WinSeparator" })
+  --   end,
+  -- },
+}

@@ -1,0 +1,22 @@
+theme = Eldritch
+font-family = "Hack Nerd Font Mono"
+
+fullscreen = true
+
+adjust-cell-height = -1
+adjust-cell-width = -1
+
+copy-on-select = clipboard
+clipboard-read = allow
+clipboard-write = allow
+scrollback-limit = 100000
+window-padding-y = 0
+window-padding-x = 0
+window-padding-color = extend
+window-save-state = always
+cursor-style = block
+cursor-style-blink = true
+shell-integration-features = no-cursor
+
+keybind = ctrl+a=unbind
+keybind = performable:super+v=paste_from_clipboard

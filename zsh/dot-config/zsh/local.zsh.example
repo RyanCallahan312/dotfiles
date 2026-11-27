@@ -1,0 +1,12 @@
+# Copy this file to ~/.config/zsh/local.zsh for machine-specific overrides.
+
+# export GDRIVE_PATH="$HOME/Library/CloudStorage/GoogleDrive-you@example.com"
+# export OPENCODE_GOTIFY_URL="https://gotify.example.com"
+# export OPENCODE_GOTIFY_TOKEN="replace-me"
+# export AWS_PROFILE="default-mfa"
+
+# if [[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/nexus/nexus_config.bash" ]]; then
+#   source "${XDG_CONFIG_HOME:-$HOME/.config}/nexus/nexus_config.bash"
+# fi
+
+# alias chromium="$HOME/path/to/chromium"
